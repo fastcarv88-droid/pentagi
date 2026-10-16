@@ -1,0 +1,35 @@
+name: Sync upstream main
+
+on:
+  schedule:
+    # Daily at 10:17 Asia/Shanghai (02:17 UTC)
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream-main
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Add upstream and fetch main
+        run: |
+          git remote add upstream https://github.com/vxcontrol/pentagi.git
+          git fetch upstream main
+
+      - name: Fast-forward fork when upstream has new commits
+        run: |
+          git switch main
+          git merge --ff-only upstream/main
+          git push origin main
